@@ -1,7 +1,6 @@
-
 import streamlit as st
 import numpy as np
-import matplotlib.pyplot as plt
+import plotly.graph_objects as go
 from math import cos, sin, pi, degrees, radians
 st.title("Mohr's Circle Demonstrator")
 st.write("By Ali Chaudhry, University of Waterloo")
@@ -43,73 +42,153 @@ if response:
 C = (sigx + sigz) / 2
 R = ((((sigx - sigz) / 2) ** 2) + taoxz ** 2) ** 0.5
 
-t = np.linspace(0, 2 * np.pi, 100 + 1)
-x1 = R * np.cos(t) + C
-x2 = R * np.sin(t)
-fig = plt.figure()
-ax = fig.add_subplot(111)
-ax.set_aspect(1)
-sig1 = C+R
-sig2 = C-R
+sig1 = C + R
+sig2 = C - R
 sigx_prime = C + ((sigx-sigz)/2)*cos(2*radians(theta)) + taoxz*sin(2*radians(theta))
 sigz_prime = C - ((sigx-sigz)/2)*cos(2*radians(theta)) - taoxz*sin(2*radians(theta))
 tao_prime = -((sigx-sigz)/2)*sin(2*radians(theta)) + taoxz*cos(2*radians(theta))
 
-ax.plot(x1,x2,color='black')
-ax.set_aspect(2)
-# Major ticks every 20, minor ticks every 5
+t = np.linspace(0, 2 * np.pi, 100 + 1)
+x1 = R * np.cos(t) + C
+x2 = R * np.sin(t)
 
-if sig1 <= 500:
-    major_ticks = np.arange(-R, R, 100)
-    minor_ticks = np.arange(-150, 150, 10)
-elif sig2 > 100 and sigx <=1000:
-    major_ticks = np.arange(-1500, 900, 100)
-    minor_ticks = np.arange(-1500, 900, 10)
-
-ax.set_xticks(major_ticks)
-ax.set_xticks(minor_ticks, minor=True)
-ax.set_yticks(major_ticks)
-ax.set_yticks(minor_ticks, minor=True)
-
-ax.grid(which='both',linestyle='-')
-
+# Define arrays for lines
 X1 = np.array([sigx, sigz])
 Y1 = np.array([-taoxz, taoxz])
-
-X2 = np.array([sigx_prime,sigz_prime])
-Y2 = np.array([-tao_prime,tao_prime])
-
+X2 = np.array([sigx_prime, sigz_prime])
+Y2 = np.array([-tao_prime, tao_prime])
 X3 = np.array([sig2, sig1])
-Y3 = [0, 0]
-
-X4 = [C,C]
+Y3 = np.array([0, 0])
+X4 = np.array([C, C])
 Y4 = np.array([-R, R])
 
+# Create the Plotly figure
+fig = go.Figure()
 
-ax.plot(X4, Y4, color='black')
-ax.plot(X3,Y3, color='black')
-ax.plot(X1,Y1, color='red')
-ax.plot(X2,Y2, color="cyan")
-ax.set_aspect(1)
-ax.scatter(sigx,-taoxz, color='c', label=r'$\sigma_{x}$')
-ax.scatter(sigz,taoxz, color='k', label=r'$\sigma_{z}$')
-ax.scatter(sig1,0, color='b', label=r'$\sigma^\prime_{1}$')
-ax.scatter(sig2,0, color='r', label=r'$\sigma^\prime_{2}$')
-ax.scatter(C,0, color='m', label="Centre")
-ax.scatter(sigx_prime,-tao_prime)
-ax.scatter(sigz_prime,tao_prime)
-ax.axvline(x=sigx, color="b")
-ax.axhline(y=taoxz, color="b")
+# Add the Mohr's circle
+fig.add_trace(go.Scatter(
+    x=x1, y=x2,
+    mode='lines',
+    name="Mohr's Circle",
+    line=dict(color='black')
+))
 
-#ax.axhline(y=0, color='k')
-#ax.axvline(x=0, color='k')
+# Add the vertical and horizontal lines through center
+fig.add_trace(go.Scatter(
+    x=X4, y=Y4,
+    mode='lines',
+    name='Center Lines',
+    line=dict(color='black')
+))
 
-ax.legend(loc="upper left", prop={"size":6})
+# Add principle stress line
+fig.add_trace(go.Scatter(
+    x=X3, y=Y3,
+    mode='lines',
+    name='Principle Stresses',
+    line=dict(color='black')
+))
 
+# Add stress points line
+fig.add_trace(go.Scatter(
+    x=X1, y=Y1,
+    mode='lines',
+    name='Stress Points',
+    line=dict(color='red')
+))
 
-plt.xlabel("Normal Stress ($\sigma_{x}$)")
-plt.ylabel("Shear Stress ($\\tau_{xz}$)")
-plt.title("Mohr's Circle of Stresses")
+# Add transformed stress line
+fig.add_trace(go.Scatter(
+    x=X2, y=Y2,
+    mode='lines',
+    name='Transformed Stress',
+    line=dict(color='cyan')
+))
+
+# Add scatter points
+fig.add_trace(go.Scatter(
+    x=[sigx], y=[-taoxz],
+    mode='markers',
+    name='σx',
+    marker=dict(color='cyan', size=10)
+))
+
+fig.add_trace(go.Scatter(
+    x=[sigz], y=[taoxz],
+    mode='markers',
+    name='σz',
+    marker=dict(color='black', size=10)
+))
+
+fig.add_trace(go.Scatter(
+    x=[sig1], y=[0],
+    mode='markers',
+    name="σ'1",
+    marker=dict(color='blue', size=10)
+))
+
+fig.add_trace(go.Scatter(
+    x=[sig2], y=[0],
+    mode='markers',
+    name="σ'2",
+    marker=dict(color='red', size=10)
+))
+
+fig.add_trace(go.Scatter(
+    x=[C], y=[0],
+    mode='markers',
+    name='Centre',
+    marker=dict(color='magenta', size=10)
+))
+
+fig.add_trace(go.Scatter(
+    x=[sigx_prime], y=[-tao_prime],
+    mode='markers',
+    name='Transformed Point 1',
+    marker=dict(color='cyan', size=10)
+))
+
+fig.add_trace(go.Scatter(
+    x=[sigz_prime], y=[tao_prime],
+    mode='markers',
+    name='Transformed Point 2',
+    marker=dict(color='cyan', size=10)
+))
+
+# Add vertical and horizontal lines at stress points
+fig.add_vline(x=sigx, line_width=1, line_color="blue")
+fig.add_hline(y=taoxz, line_width=1, line_color="blue")
+
+# Update layout
+fig.update_layout(
+    title="Mohr's Circle of Stresses",
+    xaxis_title="Normal Stress (σx)",
+    yaxis_title="Shear Stress (τxz)",
+    showlegend=True,
+    legend=dict(
+        yanchor="top",
+        y=0.99,
+        xanchor="left",
+        x=0.01,
+        font=dict(size=10)
+    ),
+    # Make the plot square and add grid
+    yaxis=dict(
+        scaleanchor="x",
+        scaleratio=1,
+        showgrid=True,
+        gridwidth=1,
+        gridcolor='LightGray',
+    ),
+    xaxis=dict(
+        showgrid=True,
+        gridwidth=1,
+        gridcolor='LightGray',
+    ),
+)
+
+# Display the plot in Streamlit
+st.plotly_chart(fig, use_container_width=True)
 
 st.sidebar.title("Properties of Mohr's Circle")
 st.sidebar.write("Radius: ", "{:.2f}".format(R))
@@ -134,8 +213,6 @@ st.sidebar.write("Transformed Shear Stress: ", "{:.2f}".format(tao_prime))
     #plt.annotate("σxθ", (sigx_prime,-tao_prime))
     #plt.annotate("Pole", (sigx, taoxz))
 
-
-st.pyplot(fig)
 
 st.title("Why Mohr's Circle?")
 st.write("")
